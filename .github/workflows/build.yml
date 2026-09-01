@@ -6,7 +6,7 @@ on:
       build_type:
         description: 'Build flavor (stable or edge)'
         required: true
-        default: 'stable'
+        default: 'edge'
         type: choice
         options:
           - 'stable'
@@ -40,16 +40,16 @@ jobs:
 
       - name: Build UNVR Docker Image (Native ARM64)
         run: |
-          BUILD_TYPE="${{ github.event.inputs.build_type || 'stable' }}"
+          BUILD_TYPE="${{ github.event.inputs.build_type || 'edge' }}"
           IMAGE_NAME="dciancu/unifi-protect-unvr-docker-arm64"
           
           echo "IMAGE_NAME=${IMAGE_NAME}" >> "$GITHUB_ENV"
           echo "BUILD_TYPE=${BUILD_TYPE}" >> "$GITHUB_ENV"
           
           if [ "$BUILD_TYPE" = "stable" ]; then
-            BUILD_STABLE=1 DOCKER_IMAGE="$IMAGE_NAME" bash build.sh
+            UPDATE_PROTECT=0 BUILD_STABLE=1 DOCKER_IMAGE="$IMAGE_NAME" bash build.sh
           else
-            BUILD_EDGE=1 DOCKER_IMAGE="$IMAGE_NAME" bash build.sh
+            UPDATE_PROTECT=0 BUILD_EDGE=1 DOCKER_IMAGE="$IMAGE_NAME" bash build.sh
           fi
 
       - name: Export Docker Image to Tarball
