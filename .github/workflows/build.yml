@@ -1,0 +1,90 @@
+name: Build and Export UNVR Docker Image (Native ARM64)
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build flavor (stable or edge)'
+        required: true
+        default: 'stable'
+        type: choice
+        options:
+          - 'stable'
+          - 'edge'
+      compress:
+        description: 'Compress tar with gzip (.tar.gz)'
+        required: false
+        default: true
+        type: boolean
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    name: Build UNVR Image (ARM64)
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Free runner disk space
+        run: |
+          sudo docker image prune -af || true
+          df -h
+
+      - name: Build UNVR Docker Image (Native ARM64)
+        run: |
+          BUILD_TYPE="${{ github.event.inputs.build_type || 'stable' }}"
+          IMAGE_NAME="dciancu/unifi-protect-unvr-docker-arm64"
+          
+          echo "IMAGE_NAME=${IMAGE_NAME}" >> "$GITHUB_ENV"
+          echo "BUILD_TYPE=${BUILD_TYPE}" >> "$GITHUB_ENV"
+          
+          if [ "$BUILD_TYPE" = "stable" ]; then
+            BUILD_STABLE=1 DOCKER_IMAGE="$IMAGE_NAME" bash build.sh
+          else
+            BUILD_EDGE=1 DOCKER_IMAGE="$IMAGE_NAME" bash build.sh
+          fi
+
+      - name: Export Docker Image to Tarball
+        run: |
+          COMPRESS="${{ github.event.inputs.compress != 'false' }}"
+          PREFIX="unifi-protect-unvr-arm64-${BUILD_TYPE}"
+          
+          mkdir -p dist
+          
+          echo "Saving ${IMAGE_NAME}:${BUILD_TYPE} to dist/${PREFIX}.tar..."
+          docker save "${IMAGE_NAME}:${BUILD_TYPE}" -o "dist/${PREFIX}.tar"
+          
+          if [ "$COMPRESS" = "true" ]; then
+            echo "Compressing tarball with gzip..."
+            gzip -9 "dist/${PREFIX}.tar"
+            echo "ARTIFACT_NAME=${PREFIX}.tar.gz" >> "$GITHUB_ENV"
+            echo "ARTIFACT_PATH=dist/${PREFIX}.tar.gz" >> "$GITHUB_ENV"
+          else
+            echo "ARTIFACT_NAME=${PREFIX}.tar" >> "$GITHUB_ENV"
+            echo "ARTIFACT_PATH=dist/${PREFIX}.tar" >> "$GITHUB_ENV"
+          fi
+          
+          ls -lh dist/
+
+      - name: Compute build tag
+        id: build_tag
+        run: |
+          TAG="build-$(date -u +%Y%m%d-%H%M%S)-${{ github.sha }}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release and Upload Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.build_tag.outputs.tag }}
+          name: Build ${{ steps.build_tag.outputs.tag }}
+          draft: false
+          prerelease: true
+          files: |
+            ${{ env.ARTIFACT_PATH }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
