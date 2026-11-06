@@ -57,6 +57,14 @@ Run `python3 check-build.py` from Linux or WSL to check shell syntax, firmware
 guards, download endpoints, and PostgreSQL 14 ARM64 package availability. This
 preflight does not replace a full Docker build or a runtime test.
 
+For the edge assets dependency chain, run `python3 check-protect-dependencies.py`
+on Linux or WSL with `apt-get` available. It reads official package metadata and
+simulates ARM64 dependency resolution in a temporary APT directory without
+installing packages. The edge build downloads `unifi-user-assets` and
+`unifi-face-shared-lib` from the firmware API because the Bullseye APT repository
+contains older versions. Override these downloads with `USER_ASSETS_URL` and
+`FACE_SHARED_LIB_URL` if needed.
+
 `Dockerfile` usage:
 ```
 # build edge
