@@ -1,6 +1,7 @@
 FROM debian:trixie AS firmware-base
 ARG DEBIAN_FRONTEND=noninteractive
 SHELL ["/usr/bin/env", "bash", "-c"]
+COPY files/etc/apt/apt.conf.d/80-download-retries /etc/apt/apt.conf.d/80-download-retries
 RUN --mount=target=/var/lib/apt/lists,type=cache --mount=target=/var/cache/apt,type=cache \
     set -euo pipefail \
     && apt-get update \
