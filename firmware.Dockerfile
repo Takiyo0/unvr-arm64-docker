@@ -41,6 +41,11 @@ RUN --mount=target=/var/lib/apt/lists,type=cache --mount=target=/var/cache/apt,t
     && sha1sum fwupdate.bin | tee fwupdate.sha1 \
     && useradd --shell /bin/bash build \
     && binwalk --run-as=build -e fwupdate.bin \
+    && firmware_debian_version="$(cat _fwupdate.bin.extracted/squashfs-root/etc/debian_version)" \
+    && case "$firmware_debian_version" in \
+        11.*) ;; \
+        *) echo "ERROR: firmware uses Debian $firmware_debian_version; Protect requires Debian 11 firmware. Use firmware.txt and unset FW_URL/FW_EDGE." >&2; exit 1 ;; \
+    esac \
     && rm fwupdate.bin \
     && cp _fwupdate.bin.extracted/squashfs-root/usr/lib/version . \
     && dpkg-query --admindir=_fwupdate.bin.extracted/squashfs-root/var/lib/dpkg/ -W -f='${package} | ${Maintainer}\n' | \

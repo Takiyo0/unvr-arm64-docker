@@ -49,6 +49,14 @@ There are two image variants:
 - `edge` - uses latest Protect version 
 - `stable` - uses Protect version packaged in UNVR firmware 
 
+Both variants use the Debian 11 firmware pinned in `firmware.txt`. `edge` updates
+Protect, not the firmware operating system. UNVR 6 firmware requires newer system
+libraries and cannot be mixed with this Debian 11 container.
+
+Run `python3 check-build.py` from Linux or WSL to check shell syntax, firmware
+guards, download endpoints, and PostgreSQL 14 ARM64 package availability. This
+preflight does not replace a full Docker build or a runtime test.
+
 `Dockerfile` usage:
 ```
 # build edge

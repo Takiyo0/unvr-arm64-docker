@@ -49,7 +49,7 @@ jobs:
           if [ "$BUILD_TYPE" = "stable" ]; then
             UPDATE_PROTECT=0 BUILD_STABLE=1 DOCKER_IMAGE="$IMAGE_NAME" bash build.sh
           else
-            UPDATE_PROTECT=0 BUILD_EDGE=1 DOCKER_IMAGE="$IMAGE_NAME" FW_URL="https://fw-download.ubnt.com/data/unifi-nvr/6aff-UNVR-6.0.10-45536f82-d67a-400a-9c6a-94c376ae2ada.bin" bash build.sh
+            BUILD_EDGE=1 DOCKER_IMAGE="$IMAGE_NAME" bash build.sh
           fi
 
       - name: Export Docker Image to Tarball

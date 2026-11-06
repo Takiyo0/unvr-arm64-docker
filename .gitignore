@@ -2,3 +2,4 @@
 docker-compose.override.yml
 /service*.js
 /*.tar
+.idea
